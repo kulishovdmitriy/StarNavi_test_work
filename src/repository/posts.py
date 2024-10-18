@@ -1,3 +1,4 @@
+from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -19,6 +20,10 @@ async def get_post(post_id: int, db: AsyncSession):
 
 async def create_post(body: CreatePostSchema, db: AsyncSession):
     new_post = Post(**body.model_dump(exclude_unset=True))
+
+    if new_post.check_profanity():
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Post contains forbidden words")
+
     db.add(new_post)
     await db.commit()
     await db.refresh(new_post)
@@ -29,11 +34,18 @@ async def update_post(post_id: int, body: UpdatePostSchema, db: AsyncSession):
     stmt = select(Post).filter_by(id=post_id)
     result = await db.execute(stmt)
     post = result.scalar_one_or_none()
-    if post:
-        post.title = body.title
-        post.content = body.content
-        await db.commit()
-        await db.refresh(post)
+    if not post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Post with id {post_id} not found")
+
+    post.title = body.title
+    post.content = body.content
+
+    if post.check_profanity():
+        await db.rollback()
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Post contains forbidden words")
+
+    await db.commit()
+    await db.refresh(post)
     return post
 
 

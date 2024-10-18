@@ -16,8 +16,20 @@ class Post(Base):
     content: Mapped[str] = mapped_column(String(255))
     created_at: Mapped[date] = mapped_column("created_at", DateTime, default=func.now())
     completed: Mapped[bool] = mapped_column(default=False)
+    is_blocked: Mapped[bool] = mapped_column(Boolean, default=False)
 
     comments = relationship("Comment", back_populates="post", cascade="all, delete-orphan")
+
+    def check_profanity(self):
+        profanity_list = ["плохое_слово1", "плохое_слово2"]
+        content_lower = self.content.lower()
+        title_lower = self.title.lower()
+
+        for word in profanity_list:
+            if word in content_lower or word in title_lower:
+                self.is_blocked = True
+                return True
+        return False
 
 
 class Comment(Base):
