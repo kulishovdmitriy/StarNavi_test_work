@@ -1,9 +1,15 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Response
+from datetime import date
+from fastapi import APIRouter, Depends, HTTPException, status, Response, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.db import get_database
 from src.repository.comments import (
-    get_comments, create_comment, update_comment, delete_comment, get_comment_by_post
+    get_comments,
+    create_comment,
+    update_comment,
+    delete_comment,
+    get_comment_by_post,
+    get_comments_daily_breakdown
 )
 from src.schemas.comments import CreateCommentSchema, UpdateCommentSchema, ResponseCommentSchema
 from src.servises.logger import setup_logger
@@ -69,3 +75,19 @@ async def delete_comment_view(comment_id: int, post_id: int, db: AsyncSession = 
     except Exception as e:
         logger.error(f"Error deleting comment {comment_id} for post {post_id}: {e}")
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Failed to delete comment")
+
+
+@router.get('/daily-breakdown')
+async def comments_daily_breakdown_view(
+        date_from: date = Query(...),
+        date_to: date = Query(...),
+        db: AsyncSession = Depends(get_database)
+):
+    if date_from > date_to:
+        raise HTTPException(status_code=400, detail="date_from must be less than or equal to date_to")
+
+    daily_data = await get_comments_daily_breakdown(date_from, date_to, db)
+
+    if not daily_data:
+        return {"message": f"No comments for this period {date_from} - {date_to}."}
+    return daily_data
