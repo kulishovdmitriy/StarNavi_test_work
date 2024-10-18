@@ -16,6 +16,7 @@ class UpdateCommentSchema(CommentSchema):
 class ResponseCommentSchema(BaseModel):
     id: int
     description: str
+    is_blocked: bool
 
     class Config:
         from_attributes = True
