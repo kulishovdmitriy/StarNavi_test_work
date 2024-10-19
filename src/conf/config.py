@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     POSTGRES_PASSWORD: str
     POSTGRES_HOST: str
     POSTGRES_PORT: str
+    SECRET_KEY_JWT: str
 
     model_config = ConfigDict(extra='ignore', env_file='.env', env_file_encoding="utf-8")  # noqa
 
