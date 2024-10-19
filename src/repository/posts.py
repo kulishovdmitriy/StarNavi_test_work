@@ -3,26 +3,29 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.entity.models import Post
-from src.schemas.posts import CreatePostSchema, UpdatePostSchema
+from src.schemas.post import CreatePostSchema, UpdatePostSchema
+from src.entity.models import User
 
 
-async def get_posts(limit: int, offset: int, db: AsyncSession):
-    stmt = select(Post).limit(limit).offset(offset)
+async def get_posts(limit: int, offset: int, db: AsyncSession, current_user: User):
+    stmt = select(Post).filter_by(user=current_user).limit(limit).offset(offset)
     posts = await db.execute(stmt)
     return posts.scalars().all()
 
 
-async def get_post(post_id: int, db: AsyncSession):
-    stmt = select(Post).filter_by(id=post_id)
+async def get_post(post_id: int, db: AsyncSession, current_user: User):
+    stmt = select(Post).filter_by(id=post_id, user=current_user)
     post = await db.execute(stmt)
     return post.scalar_one_or_none()
 
 
-async def create_post(body: CreatePostSchema, db: AsyncSession):
+async def create_post(body: CreatePostSchema, db: AsyncSession, current_user: User):
     new_post = Post(**body.model_dump(exclude_unset=True))
 
     if new_post.check_profanity():
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Post contains forbidden words")
+
+    new_post.user = current_user
 
     db.add(new_post)
     await db.commit()
@@ -30,8 +33,8 @@ async def create_post(body: CreatePostSchema, db: AsyncSession):
     return new_post
 
 
-async def update_post(post_id: int, body: UpdatePostSchema, db: AsyncSession):
-    stmt = select(Post).filter_by(id=post_id)
+async def update_post(post_id: int, body: UpdatePostSchema, db: AsyncSession, current_user: User):
+    stmt = select(Post).filter_by(id=post_id, user=current_user)
     result = await db.execute(stmt)
     post = result.scalar_one_or_none()
     if not post:
@@ -49,8 +52,8 @@ async def update_post(post_id: int, body: UpdatePostSchema, db: AsyncSession):
     return post
 
 
-async def delete_post(post_id: int, db: AsyncSession):
-    stmt = select(Post).filter_by(id=post_id)
+async def delete_post(post_id: int, db: AsyncSession, current_user: User):
+    stmt = select(Post).filter_by(id=post_id, user=current_user)
     post = await db.execute(stmt)
     post = post.scalar_one_or_none()
     if post:

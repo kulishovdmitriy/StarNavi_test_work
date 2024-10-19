@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query, Response
 from sqlalchemy.ext.asyncio import AsyncSession
+from src.servises.auth import current_active_user
 
 from src.database.db import get_database
+from src.entity.models import User
 from src.repository.posts import get_posts, get_post, create_post, update_post, delete_post
-from src.schemas.posts import CreatePostSchema, UpdatePostSchema, ResponsePostSchema
+from src.schemas.post import CreatePostSchema, UpdatePostSchema, ResponsePostSchema
 from src.servises.logger import setup_logger
-
 
 logger = setup_logger(__name__)
 
@@ -14,8 +15,9 @@ router = APIRouter(prefix='/posts', tags=['posts'])
 
 @router.get('/', response_model=list[ResponsePostSchema])
 async def get_posts_view(limit: int = Query(10, ge=10, le=500), offset: int = Query(0, ge=0),
-                         db: AsyncSession = Depends(get_database)):
-    posts = await get_posts(limit, offset, db)
+                         db: AsyncSession = Depends(get_database), user: User = Depends(current_active_user)):
+
+    posts = await get_posts(limit, offset, db, user)
 
     if not posts:
         logger.error("No posts found")
@@ -25,8 +27,10 @@ async def get_posts_view(limit: int = Query(10, ge=10, le=500), offset: int = Qu
 
 
 @router.get('/{post_id:int}', response_model=ResponsePostSchema)
-async def get_post_view(post_id: int, db: AsyncSession = Depends(get_database)):
-    post = await get_post(post_id, db)
+async def get_post_view(post_id: int, db: AsyncSession = Depends(get_database),
+                        user: User = Depends(current_active_user)):
+
+    post = await get_post(post_id, db, user)
 
     if not post:
         logger.error(f"Post with id {post_id} not found")
@@ -36,13 +40,15 @@ async def get_post_view(post_id: int, db: AsyncSession = Depends(get_database)):
 
 
 @router.post('/create', response_model=ResponsePostSchema, status_code=status.HTTP_201_CREATED)
-async def create_post_view(body: CreatePostSchema, db: AsyncSession = Depends(get_database)):
+async def create_post_view(body: CreatePostSchema, db: AsyncSession = Depends(get_database),
+                           user: User = Depends(current_active_user)):
+
     if not body.title or not body.content:
         logger.error("Title and content are required")
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Title and content are required")
 
     try:
-        now_post = await create_post(body, db)
+        now_post = await create_post(body, db, user)
         return now_post
 
     except Exception as e:
@@ -51,8 +57,10 @@ async def create_post_view(body: CreatePostSchema, db: AsyncSession = Depends(ge
 
 
 @router.put('/{post_id:int}', response_model=ResponsePostSchema, status_code=status.HTTP_202_ACCEPTED)
-async def update_post_view(post_id: int, body: UpdatePostSchema, db: AsyncSession = Depends(get_database)):
-    post = await get_post(post_id, db)
+async def update_post_view(post_id: int, body: UpdatePostSchema, db: AsyncSession = Depends(get_database),
+                           user: User = Depends(current_active_user)):
+
+    post = await get_post(post_id, db, user)
 
     if not post:
         logger.error(f"Post with id {post_id} not found")
@@ -72,8 +80,10 @@ async def update_post_view(post_id: int, body: UpdatePostSchema, db: AsyncSessio
 
 
 @router.delete('/{post_id:int}', response_model=ResponsePostSchema)
-async def delete_post_view(post_id: int, db: AsyncSession = Depends(get_database)):
-    post = await get_post(post_id, db)
+async def delete_post_view(post_id: int, db: AsyncSession = Depends(get_database),
+                           user: User = Depends(current_active_user)):
+
+    post = await get_post(post_id, db, user)
 
     if not post:
         logger.error(f"Post with id {post_id} not found")

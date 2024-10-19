@@ -2,6 +2,7 @@ from datetime import date
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String, func, DateTime, Boolean, Integer, ForeignKey
 from sqlalchemy.orm import DeclarativeBase
+from fastapi_users_db_sqlalchemy import SQLAlchemyBaseUserTableUUID, generics
 
 
 class Base(DeclarativeBase):
@@ -19,6 +20,9 @@ class Post(Base):
     is_blocked: Mapped[bool] = mapped_column(Boolean, default=False)
 
     comments = relationship("Comment", back_populates="post", cascade="all, delete-orphan")
+
+    user_id: Mapped[int] = mapped_column(generics.GUID(), ForeignKey('users.id'), nullable=True)
+    user = relationship("User", back_populates="posts", lazy="joined")
 
     def check_profanity(self):
         profanity_list = ["плохое_слово1", "плохое_слово2"]
@@ -43,6 +47,9 @@ class Comment(Base):
     post_id: Mapped[int] = mapped_column(Integer, ForeignKey('posts.id'))
     post = relationship("Post", back_populates="comments")
 
+    user_id: Mapped[int] = mapped_column(generics.GUID(), ForeignKey('users.id'), nullable=True)
+    user = relationship("User", back_populates="comments", lazy="joined")
+
     def check_profanity(self):
 
         profanity_list = ["плохое_слово1", "плохое_слово2"]
@@ -51,3 +58,14 @@ class Comment(Base):
                 self.is_blocked = True
                 return True
         return False
+
+
+class User(SQLAlchemyBaseUserTableUUID, Base):
+
+    __tablename__ = "users"
+    username: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
+    created_at: Mapped[date] = mapped_column("created_at", DateTime, default=func.now())
+    updated_at: Mapped[date] = mapped_column("updated_at", DateTime, default=func.now(), onupdate=func.now())
+
+    posts = relationship("Post", back_populates="user")
+    comments = relationship("Comment", back_populates="user")
