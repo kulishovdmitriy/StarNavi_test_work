@@ -4,6 +4,12 @@ from sqlalchemy import String, func, DateTime, Boolean, Integer, ForeignKey
 from sqlalchemy.orm import DeclarativeBase
 from fastapi_users_db_sqlalchemy import SQLAlchemyBaseUserTableUUID, generics
 
+from src.servises.google_analyze_content import analyze_content_post, analyze_content_comment
+from src.servises.logger import setup_logger
+
+
+logger = setup_logger(__name__)
+
 
 class Base(DeclarativeBase):
     pass
@@ -24,15 +30,11 @@ class Post(Base):
     user_id: Mapped[int] = mapped_column(generics.GUID(), ForeignKey('users.id'), nullable=True)
     user = relationship("User", back_populates="posts", lazy="joined")
 
-    def check_profanity(self):
-        profanity_list = ["плохое_слово1", "плохое_слово2"]
-        content_lower = self.content.lower()
-        title_lower = self.title.lower()
-
-        for word in profanity_list:
-            if word in content_lower or word in title_lower:
-                self.is_blocked = True
-                return True
+    async def check_profanity(self):
+        response = await analyze_content_post(self.content, self.title)
+        if response.get("is_blocked"):
+            self.is_blocked = True
+            return True
         return False
 
 
@@ -50,13 +52,13 @@ class Comment(Base):
     user_id: Mapped[int] = mapped_column(generics.GUID(), ForeignKey('users.id'), nullable=True)
     user = relationship("User", back_populates="comments", lazy="joined")
 
-    def check_profanity(self):
-
-        profanity_list = ["плохое_слово1", "плохое_слово2"]
-        for word in profanity_list:
-            if word in self.description.lower():
-                self.is_blocked = True
-                return True
+    async def check_profanity(self):
+        logger.info(f"Checking profanity for comment: {self.description}")
+        response = await analyze_content_comment(self.description)
+        logger.info(f"Profanity check response: {response}")
+        if response.get("is_blocked"):
+            self.is_blocked = True
+            return True
         return False
 
 
