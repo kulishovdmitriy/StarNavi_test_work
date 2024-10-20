@@ -93,13 +93,12 @@ async def delete_comment_view(comment_id: int, post_id: int, db: AsyncSession = 
 
 @router.get('/daily-breakdown')
 async def comments_daily_breakdown_view(date_from: date = Query(...), date_to: date = Query(...),
-                                        db: AsyncSession = Depends(get_database),
-                                        user: User = Depends(current_active_user)):
+                                        db: AsyncSession = Depends(get_database)):
 
     if date_from > date_to:
         raise HTTPException(status_code=400, detail="date_from must be less than or equal to date_to")
 
-    daily_data = await get_comments_daily_breakdown(date_from, date_to, db, user)
+    daily_data = await get_comments_daily_breakdown(date_from, date_to, db)
 
     if not daily_data:
         return {"message": f"No comments for this period {date_from} - {date_to}."}

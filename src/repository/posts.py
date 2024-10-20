@@ -22,7 +22,7 @@ async def get_post(post_id: int, db: AsyncSession, current_user: User):
 async def create_post(body: CreatePostSchema, db: AsyncSession, current_user: User):
     new_post = Post(**body.model_dump(exclude_unset=True))
 
-    if new_post.check_profanity():
+    if await new_post.check_profanity():
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Post contains forbidden words")
 
     new_post.user = current_user
@@ -43,7 +43,7 @@ async def update_post(post_id: int, body: UpdatePostSchema, db: AsyncSession, cu
     post.title = body.title
     post.content = body.content
 
-    if post.check_profanity():
+    if await post.check_profanity():
         await db.rollback()
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Post contains forbidden words")
 

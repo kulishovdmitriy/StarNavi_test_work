@@ -5,6 +5,9 @@ from sqlalchemy import select, func, case
 
 from src.entity.models import Comment, User
 from src.schemas.comment import CreateCommentSchema, UpdateCommentSchema
+from src.servises.logger import setup_logger
+
+logger = setup_logger(__name__)
 
 
 async def get_comments(post_id: int, db: AsyncSession, current_user: User):
@@ -23,15 +26,21 @@ async def get_comment_by_post(post_id: int, comment_id: int, db: AsyncSession, c
 async def create_comment(post_id: int, body: CreateCommentSchema, db: AsyncSession, current_user: User):
     new_comment = Comment(post_id=post_id, user=current_user, **body.model_dump(exclude_unset=True))
 
-    if new_comment.check_profanity():
+    logger.info(f"Attempting to create a comment for post_id={post_id} by user_id={current_user.id}")
+
+    if await new_comment.check_profanity():
+        logger.warning(
+            f"Profanity detected in comment for post_id={post_id} by user_id={current_user.id}. Comment blocked.")
         db.add(new_comment)
         await db.commit()
         await db.refresh(new_comment)
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Comment is blocked due to forbidden words")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Comment contains forbidden words and is blocked.")
 
     db.add(new_comment)
     await db.commit()
     await db.refresh(new_comment)
+    logger.info(f"Comment for post_id={post_id} by user_id={current_user.id} created successfully.")
     return new_comment
 
 
@@ -45,7 +54,7 @@ async def update_comment(comment_id: int, body: UpdateCommentSchema, db: AsyncSe
 
     comment.description = body.description
 
-    if comment.check_profanity():
+    if await comment.check_profanity():
         await db.rollback()
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Comment contains forbidden words")
 
@@ -64,7 +73,7 @@ async def delete_comment(comment_id: int, db: AsyncSession, current_user: User):
     return comment
 
 
-async def get_comments_daily_breakdown(date_from: date, date_to: date, db: AsyncSession, current_user: User):
+async def get_comments_daily_breakdown(date_from: date, date_to: date, db: AsyncSession):
     stmt = select(
         func.date(Comment.created_at).label('date'),
         func.count().label('total_comments'),
@@ -76,7 +85,7 @@ async def get_comments_daily_breakdown(date_from: date, date_to: date, db: Async
         ).label('blocked_comments')
     ).filter(
         func.date(Comment.created_at).between(date_from, date_to),
-        Comment.user == current_user
+
     ).group_by(
         func.date(Comment.created_at)
     ).order_by(
