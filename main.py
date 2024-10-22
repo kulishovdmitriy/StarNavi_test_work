@@ -30,11 +30,18 @@ app.include_router(comments.router, prefix="/api")
 
 @app.get("/")
 def read_root():
+    """
+    :return: A dictionary containing a greeting message with key "Hello" and value "World".
+    """
     return {"Hello": "World"}
 
 
 @app.get("/api/healthchecker")
 async def healthchecker(db: AsyncSession = Depends(get_database)):
+    """
+    :param db: The database session dependency injected into the endpoint.
+    :return: A JSON response with a welcome message if the database check succeeds, or raises an HTTPException if it fails.
+    """
 
     try:
         result = await db.execute(text("SELECT 1"))
@@ -50,4 +57,4 @@ async def healthchecker(db: AsyncSession = Depends(get_database)):
 
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
