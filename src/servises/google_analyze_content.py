@@ -11,6 +11,11 @@ BLOCK_THRESHOLD = 0.6
 
 
 async def should_block_content(moderation_categories):
+    """
+    :param moderation_categories: A list of dictionaries where each dictionary represents a content moderation category with a 'name' and a 'confidence' level.
+    :return: A boolean value indicating whether the content should be blocked based on the given moderation categories and confidence levels.
+    """
+
     for category in moderation_categories:
         if category['name'] in ['Toxic', 'Profanity', 'Sexual', 'Violent', 'Death, Harm & Tragedy']:
             if category['confidence'] > BLOCK_THRESHOLD:
@@ -19,6 +24,12 @@ async def should_block_content(moderation_categories):
 
 
 async def analyze_content_post(content: str, title: str):
+    """
+    :param content: The main content text that needs to be analyzed for moderation.
+    :param title: The title associated with the main content that also needs to be analyzed.
+    :return: A dictionary indicating whether the content should be blocked, based on moderation analysis.
+    """
+
     token = TOKEN_AUTH
     url = "https://language.googleapis.com/v1/documents:moderateText"
 
@@ -53,6 +64,12 @@ async def analyze_content_post(content: str, title: str):
 
 
 async def analyze_content_comment(content: str):
+    """
+    :param content: The text content to be analyzed for moderation.
+    :return: A dictionary indicating whether the content is blocked.
+             The dictionary has the key 'is_blocked' with the corresponding boolean value.
+    """
+
     token = TOKEN_AUTH
     url = "https://language.googleapis.com/v1/documents:moderateText"
 
