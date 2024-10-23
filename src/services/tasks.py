@@ -2,7 +2,7 @@ import asyncio
 from uuid import UUID
 
 from src.entity.models import Comment, User, Post
-from src.servises.logger import setup_logger
+from src.services.logger import setup_logger
 from src.database.db import get_database
 
 

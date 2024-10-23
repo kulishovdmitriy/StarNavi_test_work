@@ -39,7 +39,9 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
 
         async on_after_request_verify(user, token, request):
             Called after a user has requested verification. Logs the user ID and the verification token.
+
     """
+
     reset_password_token_secret = SECRET_KEY_JWT
     verification_token_secret = SECRET_KEY_JWT
 
@@ -65,9 +67,11 @@ async def get_user_manager(user_db: SQLAlchemyUserDatabase = Depends(get_user_db
     initialized with the provided SQLAlchemyUserDatabase.
 
     :param user_db: The database dependency providing access to the SQLAlchemyUserDatabase instance.
+
     :type user_db: SQLAlchemyUserDatabase
     :yield: An instance of UserManager.
     :rtype: UserManager
+
     """
 
     yield UserManager(user_db)
@@ -86,7 +90,9 @@ def get_jwt_strategy() -> JWTStrategy:
 
     :return: An instance of the JWTStrategy class initialized with a secret key
              and a lifetime of 3600 seconds.
+
     :rtype: JWTStrategy
+
     """
 
     return JWTStrategy(secret=SECRET_KEY_JWT, lifetime_seconds=3600)

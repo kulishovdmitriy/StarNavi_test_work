@@ -6,8 +6,8 @@ from sqlalchemy import select, func, case
 
 from src.entity.models import Comment, User
 from src.schemas.comment import CreateCommentSchema, UpdateCommentSchema
-from src.servises.tasks import send_auto_reply_after_delay
-from src.servises.logger import setup_logger
+from src.services.tasks import send_auto_reply_after_delay
+from src.services.logger import setup_logger
 
 logger = setup_logger(__name__)
 

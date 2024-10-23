@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query, Response
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.servises.auth import current_active_user
 
+from src.services.auth import current_active_user
 from src.database.db import get_database
 from src.entity.models import User
 from src.repository.posts import get_posts, get_post, create_post, update_post, delete_post
 from src.schemas.post import CreatePostSchema, UpdatePostSchema, ResponsePostSchema
-from src.servises.logger import setup_logger
+from src.services.logger import setup_logger
 
 
 logger = setup_logger(__name__)

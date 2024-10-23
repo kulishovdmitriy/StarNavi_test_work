@@ -13,8 +13,8 @@ from src.repository.comments import (
     get_comments_daily_breakdown
 )
 from src.schemas.comment import CreateCommentSchema, UpdateCommentSchema, ResponseCommentSchema
-from src.servises.auth import current_active_user
-from src.servises.logger import setup_logger
+from src.services.auth import current_active_user
+from src.services.logger import setup_logger
 
 
 logger = setup_logger(__name__)
