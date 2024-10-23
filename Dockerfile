@@ -9,7 +9,6 @@ WORKDIR /project
 COPY ./requirements.txt ./
 
 RUN python -m pip install --upgrade pip && \
-    pip install torch --extra-index-url https://download.pytorch.org/whl/cpu && \
     pip install -r requirements.txt
 
 COPY ./alembic.ini ./

@@ -97,7 +97,6 @@ starlette==0.40.0
 sympy==1.13.1
 tokenizers==0.20.1
 tqdm==4.66.5
-transformers==4.45.2
 typer==0.12.5
 typing_extensions==4.12.2
 tzdata==2024.2
