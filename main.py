@@ -6,7 +6,7 @@ from sqlalchemy import text
 
 from src.routes import posts, comments, auth
 from src.database.db import get_database
-from src.servises.logger import setup_logger
+from src.services.logger import setup_logger
 
 
 logger = setup_logger(__name__)
@@ -31,16 +31,32 @@ app.include_router(comments.router, prefix="/api")
 @app.get("/")
 def read_root():
     """
-    :return: A dictionary containing a greeting message with key "Hello" and value "World".
+    Root endpoint for the API.
+
+    This endpoint returns a simple greeting message.
+
+    :return: A dictionary containing a greeting message with the key "Hello"
+             and the value "World".
     """
+
     return {"Hello": "World"}
 
 
 @app.get("/api/healthchecker")
 async def healthchecker(db: AsyncSession = Depends(get_database)):
     """
+    Health checker endpoint to verify the database connection.
+
+    This endpoint checks if the database is accessible by executing a simple
+    query. If the query succeeds, it returns a welcome message. If the
+    query fails or the database is not configured correctly, it raises
+    an HTTPException with a corresponding error message.
+
     :param db: The database session dependency injected into the endpoint.
-    :return: A JSON response with a welcome message if the database check succeeds, or raises an HTTPException if it fails.
+    :type db: AsyncSession
+    :return: A JSON response containing a welcome message.
+    :rtype: dict
+    :raises HTTPException: If the database check fails or if there is a connection error.
     """
 
     try:

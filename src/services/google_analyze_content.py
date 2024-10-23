@@ -1,6 +1,6 @@
 import aiohttp
 from src.conf.config import settings
-from src.servises.logger import setup_logger
+from src.services.logger import setup_logger
 
 
 logger = setup_logger(__name__)

@@ -4,8 +4,8 @@ from sqlalchemy import String, func, DateTime, Boolean, Integer, ForeignKey
 from sqlalchemy.orm import DeclarativeBase
 from fastapi_users_db_sqlalchemy import SQLAlchemyBaseUserTableUUID, generics
 
-from src.servises.google_analyze_content import analyze_content_post, analyze_content_comment
-from src.servises.logger import setup_logger
+from src.services.google_analyze_content import analyze_content_post, analyze_content_comment
+from src.services.logger import setup_logger
 
 
 logger = setup_logger(__name__)
