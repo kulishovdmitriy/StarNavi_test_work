@@ -12,8 +12,19 @@ BLOCK_THRESHOLD = 0.6
 
 async def should_block_content(moderation_categories):
     """
-    :param moderation_categories: A list of dictionaries where each dictionary represents a content moderation category with a 'name' and a 'confidence' level.
-    :return: A boolean value indicating whether the content should be blocked based on the given moderation categories and confidence levels.
+    Determines whether content should be blocked based on moderation categories.
+
+    This function evaluates a list of moderation categories, checking if any of
+    them indicate content that should be blocked due to high confidence in
+    harmful categories. The blocking categories include Toxic, Profanity, Sexual,
+    Violent, and Death, Harm & Tragedy.
+
+    :param moderation_categories: A list of dictionaries, where each dictionary represents
+                                  a content moderation category with 'name' and 'confidence' level.
+    :type moderation_categories: List[Dict[str, Union[str, float]]]
+
+    :return: True if any moderation category exceeds the BLOCK_THRESHOLD; otherwise, False.
+    :rtype: bool
     """
 
     for category in moderation_categories:
@@ -25,9 +36,17 @@ async def should_block_content(moderation_categories):
 
 async def analyze_content_post(content: str, title: str):
     """
+    Analyzes the provided content and title for moderation issues.
+
+    This function sends the content and title to an external moderation API and checks
+    whether the content should be blocked based on moderation categories returned by the API.
+
     :param content: The main content text that needs to be analyzed for moderation.
+    :type content: str
     :param title: The title associated with the main content that also needs to be analyzed.
+    :type title: str
     :return: A dictionary indicating whether the content should be blocked, based on moderation analysis.
+    :rtype: dict
     """
 
     token = TOKEN_AUTH
@@ -38,13 +57,13 @@ async def analyze_content_post(content: str, title: str):
         "Content-Type": "application/json"
     }
 
-    instances = [
-        {"content": content},
-        {"content": title}
-    ]
-
-    data = {"instances": instances}
-
+    data = {
+        "document": {
+            "type": "PLAIN_TEXT",
+            "title": title,
+            "content": content
+        }
+    }
     try:
         async with aiohttp.ClientSession() as session:
             async with session.post(url, json=data, headers=headers, timeout=10) as response:
@@ -58,6 +77,9 @@ async def analyze_content_post(content: str, title: str):
                         return {"is_blocked": True}
 
                 return {"is_blocked": False}
+
+    except aiohttp.ClientError as e:
+        logger.error(f"Network error occurred: {e}")
     except Exception as e:
         logger.error(f"Error during prediction: {e}")
         return {"is_blocked": False}
@@ -65,9 +87,16 @@ async def analyze_content_post(content: str, title: str):
 
 async def analyze_content_comment(content: str):
     """
+    Analyzes the provided content for moderation issues.
+
+    This function sends the content to an external moderation API and checks
+    whether the content should be blocked based on moderation categories returned by the API.
+
     :param content: The text content to be analyzed for moderation.
+    :type content: str
     :return: A dictionary indicating whether the content is blocked.
              The dictionary has the key 'is_blocked' with the corresponding boolean value.
+    :rtype: dict
     """
 
     token = TOKEN_AUTH
@@ -99,6 +128,9 @@ async def analyze_content_comment(content: str):
                     error_response = await response.text()
                     logger.error(f"Error response: {error_response}")
                 return {"is_blocked": False}
+
+    except aiohttp.ClientError as e:
+        logger.error(f"Network error during moderation analysis: {e}")
     except Exception as e:
         logger.error(f"Error during prediction: {e}")
         return {"is_blocked": False}

@@ -59,8 +59,15 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, uuid.UUID]):
 
 async def get_user_manager(user_db: SQLAlchemyUserDatabase = Depends(get_user_db)):
     """
+    Dependency that provides an instance of UserManager.
+
+    This function is an asynchronous generator that yields a UserManager instance,
+    initialized with the provided SQLAlchemyUserDatabase.
+
     :param user_db: The database dependency providing access to the SQLAlchemyUserDatabase instance.
-    :return: An asynchronous generator yielding an instance of UserManager initialized with the provided SQLAlchemyUserDatabase.
+    :type user_db: SQLAlchemyUserDatabase
+    :yield: An instance of UserManager.
+    :rtype: UserManager
     """
 
     yield UserManager(user_db)
@@ -71,7 +78,15 @@ bearer_transport = BearerTransport(tokenUrl="auth/jwt/login")
 
 def get_jwt_strategy() -> JWTStrategy:
     """
-    :return: An instance of the JWTStrategy class initialized with a secret key and a lifetime of 3600 seconds.
+    Creates and returns a JWT strategy for handling JSON Web Tokens.
+
+    This function initializes the JWTStrategy class with the specified secret key
+    and a lifetime of 3600 seconds (1 hour). It can be used for generating and
+    validating JWTs in the authentication process.
+
+    :return: An instance of the JWTStrategy class initialized with a secret key
+             and a lifetime of 3600 seconds.
+    :rtype: JWTStrategy
     """
 
     return JWTStrategy(secret=SECRET_KEY_JWT, lifetime_seconds=3600)

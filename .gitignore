@@ -115,4 +115,3 @@ dmypy.json
 .pyre/
 
 credentials.json
-src/servises/tasks.py
