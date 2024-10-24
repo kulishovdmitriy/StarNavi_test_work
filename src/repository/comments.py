@@ -78,9 +78,9 @@ async def create_comment(post_id: int, body: CreateCommentSchema, db: AsyncSessi
     if await new_comment.check_profanity():
         logger.warning(
             f"Profanity detected in comment for post_id={post_id} by user_id={current_user.id}. Comment blocked.")
-        db.add(new_comment)
-        await db.commit()
-        await db.refresh(new_comment)
+        # db.add(new_comment)
+        # await db.commit()
+        # await db.refresh(new_comment)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail="Comment contains forbidden words and is blocked.")
 
@@ -131,7 +131,7 @@ async def update_comment(comment_id: int, body: UpdateCommentSchema, db: AsyncSe
 
     if await comment.check_profanity():
         await db.rollback()
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Comment contains forbidden words")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Comment contains forbidden words and is blocked.")
 
     await db.commit()
     await db.refresh(comment)
@@ -157,9 +157,12 @@ async def delete_comment(comment_id: int, db: AsyncSession, current_user: User):
     stmt = select(Comment).filter_by(id=comment_id, user=current_user)
     result = await db.execute(stmt)
     comment = result.scalar_one_or_none()
-    if comment:
-        await db.delete(comment)
-        await db.commit()
+
+    if comment is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Comment with id {comment_id} not found")
+
+    await db.delete(comment)
+    await db.commit()
     return comment
 
 
@@ -199,7 +202,7 @@ async def get_comments_daily_breakdown(date_from: date, date_to: date, db: Async
 
     results = await db.execute(stmt)
 
-    daily_data = results.all()
+    daily_data = await results.all()
 
     response = [
         {

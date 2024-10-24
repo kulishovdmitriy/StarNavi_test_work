@@ -2,9 +2,8 @@ from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.entity.models import Post
+from src.entity.models import Post, User
 from src.schemas.post import CreatePostSchema, UpdatePostSchema
-from src.entity.models import User
 
 
 async def get_posts(limit: int, offset: int, db: AsyncSession, current_user: User):
@@ -112,22 +111,25 @@ async def update_post(post_id: int, body: UpdatePostSchema, db: AsyncSession, cu
 
 async def delete_post(post_id: int, db: AsyncSession, current_user: User):
     """
-    Asynchronously deletes a specified post for the currently authenticated user.
+    Asynchronously deletes a post by its ID for the currently authenticated user.
 
-    This function retrieves the specified post and deletes it if it belongs to the authenticated user.
-    If the post is not found, it returns None. If deletion is successful, the deleted post object is returned.
+    This function attempts to delete the specified post if it belongs to the authenticated user.
+    If the post is not found, an HTTPException is raised.
 
-    :param post_id: The unique identifier of the post to be deleted.
-    :param db: The asynchronous database session used for executing queries.
-    :param current_user: The user who is currently authenticated and attempting to delete the post.
+    :param post_id: The ID of the post to be deleted.
+    :param db: The asynchronous database session to be used for executing queries and transactions.
+    :param current_user: The current logged-in user attempting to delete the post.
 
-    :return: The post that was deleted if found; otherwise, returns None.
+    :raises HTTPException: If the post is not found or does not belong to the current user.
     """
 
     stmt = select(Post).filter_by(id=post_id, user=current_user)
-    post = await db.execute(stmt)
-    post = post.scalar_one_or_none()
-    if post:
-        await db.delete(post)
-        await db.commit()
+    result = await db.execute(stmt)
+    post = result.scalar_one_or_none()
+
+    if post is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Post with id {post_id} not found")
+
+    await db.delete(post)
+    await db.commit()
     return post
