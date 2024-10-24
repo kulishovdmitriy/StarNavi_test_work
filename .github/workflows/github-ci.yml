@@ -45,4 +45,7 @@ jobs:
           TOKEN_AUTH: ${{ secrets.TOKEN_AUTH }}
         run: |
           source venv/bin/activate
+          echo "DATABASE_URL: $DATABASE_URL"
+          echo "POSTGRES_DB: $POSTGRES_DB"
+          echo "POSTGRES_USER: $POSTGRES_USER"
           pytest
