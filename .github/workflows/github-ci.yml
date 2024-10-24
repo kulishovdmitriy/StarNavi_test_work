@@ -34,18 +34,15 @@ jobs:
 
       - name: Run tests
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
-          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
-          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-          POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
-          POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
-          SECRET_KEY_JWT: ${{ secrets.SECRET_KEY_JWT }}
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
-          TOKEN_AUTH: ${{ secrets.TOKEN_AUTH }}
+          DATABASE_URL: postgres://user:password@localhost:5432/dbname
+          POSTGRES_DB: dbname
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          SECRET_KEY_JWT: secret-key-jwt123456
+          GOOGLE_APPLICATION_CREDENTIALS: ./credentials.json
+          TOKEN_AUTH: test123456
         run: |
           source venv/bin/activate
-          echo "DATABASE_URL: $DATABASE_URL"
-          echo "POSTGRES_DB: $POSTGRES_DB"
-          echo "POSTGRES_USER: $POSTGRES_USER"
           pytest
