@@ -4,6 +4,7 @@
 - [Installation](#installation)
 - [Features](#features)
 - [Setting up moderation with Google application](#setting-up-moderation-with-google-application)
+- [Running Tests](#running-tests)
 - [Additional Documentation](#additional-documentation)
 
 ## Requirements
@@ -104,6 +105,13 @@ To set up automatic moderation of posts and comments using `GOOGLE_APPLICATION`,
    - Follow the instructions for your operating system.
 
 `Now your API will utilize Google Cloud for content moderation. 
+
+## Running Tests
+
+The project uses `pytest` for running tests. Run all tests with the following command:
+ ```bash
+    pytest
+ ```
 
 ## Additional Documentation
 
