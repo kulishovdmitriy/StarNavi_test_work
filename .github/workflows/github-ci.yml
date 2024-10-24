@@ -30,3 +30,18 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           flake8 .
+
+      - name: Run tests
+        env:
+          DATABASE_URL:  postgresql+asyncpg://user:password@localhost:5432/dbname
+          POSTGRES_DB: dbname
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          SECRET_KEY_JWT: secret-key-jwt123456
+          GOOGLE_APPLICATION_CREDENTIALS: ./credentials.json
+          TOKEN_AUTH: test123456
+        run: |
+          source venv/bin/activate
+          pytest
