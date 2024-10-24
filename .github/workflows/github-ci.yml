@@ -33,7 +33,7 @@ jobs:
 
       - name: Run tests
         env:
-          DATABASE_URL: postgres://user:password@localhost:5432/dbname
+          DATABASE_URL:  postgresql+asyncpg://user:password@localhost:5432/dbname
           POSTGRES_DB: dbname
           POSTGRES_USER: user
           POSTGRES_PASSWORD: password
