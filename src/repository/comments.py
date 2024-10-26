@@ -78,9 +78,9 @@ async def create_comment(post_id: int, body: CreateCommentSchema, db: AsyncSessi
     if await new_comment.check_profanity():
         logger.warning(
             f"Profanity detected in comment for post_id={post_id} by user_id={current_user.id}. Comment blocked.")
-        # db.add(new_comment)
-        # await db.commit()
-        # await db.refresh(new_comment)
+        db.add(new_comment)
+        await db.commit()
+        await db.refresh(new_comment)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail="Comment contains forbidden words and is blocked.")
 
@@ -202,7 +202,7 @@ async def get_comments_daily_breakdown(date_from: date, date_to: date, db: Async
 
     results = await db.execute(stmt)
 
-    daily_data = await results.all()
+    daily_data = results.all()
 
     response = [
         {
