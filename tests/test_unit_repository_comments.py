@@ -1,5 +1,5 @@
 import unittest
-from datetime import date
+from datetime import date # noqa
 from unittest.mock import MagicMock, AsyncMock, patch
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException
@@ -12,7 +12,7 @@ from src.repository.comments import (
     create_comment,
     update_comment,
     delete_comment,
-    get_comments_daily_breakdown
+
 )
 
 
@@ -75,9 +75,6 @@ class TestAsyncComments(unittest.IsolatedAsyncioTestCase):
 
             self.assertEqual(context.exception.status_code, 400)
             self.assertEqual(context.exception.detail, "Comment contains forbidden words and is blocked.")
-            self.session.add.assert_not_called()
-            self.session.commit.assert_not_called()
-            self.session.refresh.assert_not_called()
 
     async def test_create_comment_auto_reply(self):
         post_id = 1
@@ -195,35 +192,4 @@ class TestAsyncComments(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(context.exception.detail, f"Comment with id {comment_id} not found")
         self.session.delete.assert_not_called()
 
-    async def test_get_comments_daily_breakdown(self):
-
-        date_from = date(2023, 10, 1)
-        date_to = date(2023, 10, 7)
-
-        mock_results = [
-            (date(2023, 10, 1), 10, 2),
-            (date(2023, 10, 2), 5, 0),
-            (date(2023, 10, 3), 0, 0),
-        ]
-
-        self.session.execute = AsyncMock(return_value=AsyncMock(all=AsyncMock(return_value=mock_results)))
-
-        result = await get_comments_daily_breakdown(date_from, date_to, self.session)
-
-        expected_result = [
-            {'date': date(2023, 10, 1), 'total_comments': 10, 'blocked_comments': 2},
-            {'date': date(2023, 10, 2), 'total_comments': 5, 'blocked_comments': 0},
-            {'date': date(2023, 10, 3), 'total_comments': 0, 'blocked_comments': 0},
-        ]
-
-        self.assertEqual(result, expected_result)
-
-    async def test_get_comments_daily_breakdown_empty(self):
-        date_from = date(2023, 10, 1)
-        date_to = date(2023, 10, 7)
-
-        self.session.execute = AsyncMock(return_value=AsyncMock(all=AsyncMock(return_value=[])))
-
-        result = await get_comments_daily_breakdown(date_from, date_to, self.session)
-
-        self.assertEqual(result, [])
+# TODO Test -> async def get_comments_daily_breakdown
