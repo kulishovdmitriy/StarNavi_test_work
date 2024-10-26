@@ -1,5 +1,5 @@
 import unittest
-from datetime import date
+from datetime import date # noqa
 from unittest.mock import MagicMock, AsyncMock, patch
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException
@@ -12,7 +12,7 @@ from src.repository.comments import (
     create_comment,
     update_comment,
     delete_comment,
-    get_comments_daily_breakdown
+
 )
 
 
@@ -192,4 +192,4 @@ class TestAsyncComments(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(context.exception.detail, f"Comment with id {comment_id} not found")
         self.session.delete.assert_not_called()
 
-
+# TODO Test -> async def get_comments_daily_breakdown
