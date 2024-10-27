@@ -92,12 +92,13 @@ async def create_comment(post_id: int, body: CreateCommentSchema, db: AsyncSessi
     if current_user.auto_reply_enabled:
         try:
             logger.info(
-                f"Отправка автоматического ответа для post_id={post_id}, comment_id={new_comment.id}, user_id={current_user.id}")
+                f"Sending automatic reply for post_id={post_id}, comment_id={new_comment.id}, user_id={current_user.id}"
+            )
 
             asyncio.create_task(send_auto_reply_after_delay(post_id, new_comment.id, current_user.id, current_user.reply_delay_minutes))
 
         except Exception as e:
-            logger.error(f"Ошибка при отправке автоматического ответа: {str(e)}")
+            logger.error(f"Error while sending automatic reply: {str(e)}")
 
     return new_comment
 

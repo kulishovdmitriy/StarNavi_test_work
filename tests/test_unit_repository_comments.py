@@ -1,5 +1,6 @@
 import unittest
-from datetime import date # noqa
+import inspect
+from datetime import date
 from unittest.mock import MagicMock, AsyncMock, patch
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException
@@ -12,6 +13,7 @@ from src.repository.comments import (
     create_comment,
     update_comment,
     delete_comment,
+    get_comments_daily_breakdown
 
 )
 
@@ -33,7 +35,7 @@ class TestAsyncComments(unittest.IsolatedAsyncioTestCase):
 
         result = await get_comments(post_id, self.session, self.user)
 
-        self.assertEqual(result, [comment_1, comment_2])  # Check if result is a list of comments
+        self.assertEqual(result, [comment_1, comment_2])
         self.session.execute.assert_called_once()
 
     async def test_get_comment_by_post(self):
@@ -80,7 +82,12 @@ class TestAsyncComments(unittest.IsolatedAsyncioTestCase):
         post_id = 1
         body = CreateCommentSchema(description="This is a comment")
 
-        with patch.object(Comment, 'check_profanity', return_value=False):
+        self.user.auto_reply_enabled = True
+        self.user.reply_delay_minutes = 2
+
+        with patch.object(Comment, 'check_profanity', return_value=False), \
+                patch('asyncio.create_task') as mock_create_task:
+
             result = await create_comment(post_id, body, self.session, self.user)
 
             self.assertIsInstance(result, Comment)
@@ -91,8 +98,18 @@ class TestAsyncComments(unittest.IsolatedAsyncioTestCase):
             self.session.commit.assert_called_once()
             self.session.refresh.assert_called_once_with(result)
 
-            # with patch('src.services.tasks.send_auto_reply_after_delay') as mock_send_auto_reply:
-            #     mock_send_auto_reply.assert_called_once_with(post_id, result.id, self.user.id, self.user.reply_delay_minutes)
+            mock_create_task.assert_called_once()
+
+            task_func = mock_create_task.call_args[0][0]
+
+            self.assertTrue(inspect.iscoroutine(task_func))
+            self.assertEqual(task_func.cr_code.co_name, 'send_auto_reply_after_delay')
+
+            frame = task_func.cr_frame
+            self.assertEqual(frame.f_locals['post_id'], post_id)
+            self.assertEqual(frame.f_locals['comment_id'], result.id)
+            self.assertEqual(frame.f_locals['user_id'], self.user.id)
+            self.assertEqual(frame.f_locals['delay_minutes'], self.user.reply_delay_minutes)
 
     async def test_create_comment_no_auto_reply(self):
         post_id = 1
@@ -136,7 +153,7 @@ class TestAsyncComments(unittest.IsolatedAsyncioTestCase):
         body = UpdateCommentSchema(description="This is an updated comment")
 
         mocked_result = MagicMock()
-        mocked_result.scalar_one_or_none.return_value = None  # Комментарий не найден
+        mocked_result.scalar_one_or_none.return_value = None
         self.session.execute.return_value = mocked_result
 
         with self.assertRaises(HTTPException) as context:
@@ -192,4 +209,42 @@ class TestAsyncComments(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(context.exception.detail, f"Comment with id {comment_id} not found")
         self.session.delete.assert_not_called()
 
-# TODO Test -> async def get_comments_daily_breakdown
+    async def test_get_comments_daily_breakdown(self):
+        date_from = date(2023, 10, 1)
+        date_to = date(2023, 10, 3)
+
+        mocked_data = [
+            (date(2024, 10, 21), 10, 3),
+            (date(2024, 10, 22), 8, 2),
+            (date(2024, 10, 23), 5, 1),
+        ]
+
+        mocked_result = MagicMock()
+        mocked_result.all.return_value = mocked_data
+        self.session.execute.return_value = mocked_result
+
+        result = await get_comments_daily_breakdown(date_from, date_to, self.session)
+
+        expected_result = [
+            {'date': date(2024, 10, 21), 'total_comments': 10, 'blocked_comments': 3},
+            {'date': date(2024, 10, 22), 'total_comments': 8, 'blocked_comments': 2},
+            {'date': date(2024, 10, 23), 'total_comments': 5, 'blocked_comments': 1},
+        ]
+
+        self.assertEqual(result, expected_result)
+        self.session.execute.assert_called_once()
+
+    async def test_get_comments_daily_breakdown_empty_result(self):
+        date_from = date(2024, 10, 17)
+        date_to = date(2024, 10, 23)
+
+        mocked_result = MagicMock()
+        mocked_result.all.return_value = []
+        self.session.execute.return_value = mocked_result
+
+        result = await get_comments_daily_breakdown(date_from, date_to, self.session)
+
+        expected_result = []
+
+        self.assertEqual(result, expected_result)
+        self.session.execute.assert_called_once()
