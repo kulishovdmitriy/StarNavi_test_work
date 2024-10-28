@@ -78,10 +78,10 @@ async def analyze_content_post(content: str, title: str):
 
                 return {"is_blocked": False}
 
-    except aiohttp.ClientError as e:
-        logger.error(f"Network error occurred: {e}")
-    except Exception as e:
-        logger.error(f"Error during prediction: {e}")
+    except aiohttp.ClientError as err:
+        logger.error(f"Network error occurred: {err}")
+    except Exception as err:
+        logger.error(f"Error during prediction: {err}")
         return {"is_blocked": False}
 
 
@@ -129,8 +129,8 @@ async def analyze_content_comment(content: str):
                     logger.error(f"Error response: {error_response}")
                 return {"is_blocked": False}
 
-    except aiohttp.ClientError as e:
-        logger.error(f"Network error during moderation analysis: {e}")
-    except Exception as e:
-        logger.error(f"Error during prediction: {e}")
+    except aiohttp.ClientError as err:
+        logger.error(f"Network error during moderation analysis: {err}")
+    except Exception as err:
+        logger.error(f"Error during prediction: {err}")
         return {"is_blocked": False}

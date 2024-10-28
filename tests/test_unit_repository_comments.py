@@ -16,6 +16,7 @@ from src.repository.comments import (
     get_comments_daily_breakdown
 
 )
+from src.conf import messages
 
 
 class TestAsyncComments(unittest.IsolatedAsyncioTestCase):
@@ -76,7 +77,7 @@ class TestAsyncComments(unittest.IsolatedAsyncioTestCase):
                 await create_comment(post_id, body, self.session, self.user)
 
             self.assertEqual(context.exception.status_code, 400)
-            self.assertEqual(context.exception.detail, "Comment contains forbidden words and is blocked.")
+            self.assertEqual(context.exception.detail, messages.COMMENT_CONTAINS_FORBIDDEN_WORDS)
 
     async def test_create_comment_auto_reply(self):
         post_id = 1
@@ -160,7 +161,7 @@ class TestAsyncComments(unittest.IsolatedAsyncioTestCase):
             await update_comment(comment_id, body, self.session, self.user)
 
         self.assertEqual(context.exception.status_code, 404)
-        self.assertEqual(context.exception.detail, f"Comment with id {comment_id} not found")
+        self.assertEqual(context.exception.detail, messages.COMMENT_NOT_FOUND.format(comment_id=comment_id))
         self.session.commit.assert_not_called()
         self.session.refresh.assert_not_called()
 
@@ -177,7 +178,7 @@ class TestAsyncComments(unittest.IsolatedAsyncioTestCase):
                 await update_comment(comment_id, body, self.session, self.user)
 
             self.assertEqual(context.exception.status_code, 400)
-            self.assertEqual(context.exception.detail, "Comment contains forbidden words and is blocked.")
+            self.assertEqual(context.exception.detail, messages.COMMENT_CONTAINS_FORBIDDEN_WORDS)
             self.session.rollback.assert_called_once()
             self.session.commit.assert_not_called()
             self.session.refresh.assert_not_called()
@@ -206,7 +207,7 @@ class TestAsyncComments(unittest.IsolatedAsyncioTestCase):
             await delete_comment(comment_id, self.session, self.user)
 
         self.assertEqual(context.exception.status_code, 404)
-        self.assertEqual(context.exception.detail, f"Comment with id {comment_id} not found")
+        self.assertEqual(context.exception.detail, messages.COMMENT_NOT_FOUND.format(comment_id=comment_id))
         self.session.delete.assert_not_called()
 
     async def test_get_comments_daily_breakdown(self):

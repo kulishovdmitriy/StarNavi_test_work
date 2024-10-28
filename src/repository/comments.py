@@ -8,6 +8,8 @@ from src.entity.models import Comment, User
 from src.schemas.comment import CreateCommentSchema, UpdateCommentSchema
 from src.services.tasks import send_auto_reply_after_delay
 from src.services.logger import setup_logger
+from src.conf import messages
+
 
 logger = setup_logger(__name__)
 
@@ -82,7 +84,7 @@ async def create_comment(post_id: int, body: CreateCommentSchema, db: AsyncSessi
         await db.commit()
         await db.refresh(new_comment)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="Comment contains forbidden words and is blocked.")
+                            detail=messages.COMMENT_CONTAINS_FORBIDDEN_WORDS)
 
     db.add(new_comment)
     await db.commit()
@@ -97,8 +99,8 @@ async def create_comment(post_id: int, body: CreateCommentSchema, db: AsyncSessi
 
             asyncio.create_task(send_auto_reply_after_delay(post_id, new_comment.id, current_user.id, current_user.reply_delay_minutes))
 
-        except Exception as e:
-            logger.error(f"Error while sending automatic reply: {str(e)}")
+        except Exception as err:
+            logger.error(f"Error while sending automatic reply: {str(err)}")
 
     return new_comment
 
@@ -126,13 +128,13 @@ async def update_comment(comment_id: int, body: UpdateCommentSchema, db: AsyncSe
     comment = result.scalar_one_or_none()
 
     if not comment:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Comment with id {comment_id} not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=messages.COMMENT_NOT_FOUND.format(comment_id=comment_id))
 
     comment.description = body.description
 
     if await comment.check_profanity():
         await db.rollback()
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Comment contains forbidden words and is blocked.")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=messages.COMMENT_CONTAINS_FORBIDDEN_WORDS)
 
     await db.commit()
     await db.refresh(comment)
@@ -160,7 +162,7 @@ async def delete_comment(comment_id: int, db: AsyncSession, current_user: User):
     comment = result.scalar_one_or_none()
 
     if comment is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Comment with id {comment_id} not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=messages.COMMENT_NOT_FOUND.format(comment_id=comment_id))
 
     await db.delete(comment)
     await db.commit()

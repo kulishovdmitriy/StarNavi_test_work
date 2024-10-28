@@ -6,6 +6,7 @@ from fastapi import HTTPException
 from src.entity.models import Post, User
 from src.schemas.post import CreatePostSchema, UpdatePostSchema
 from src.repository.posts import get_posts, get_post, create_post, update_post, delete_post
+from src.conf import messages
 
 
 class TestAsyncPosts(unittest.IsolatedAsyncioTestCase):
@@ -66,7 +67,7 @@ class TestAsyncPosts(unittest.IsolatedAsyncioTestCase):
                 await create_post(body, self.session, self.user)
 
             self.assertEqual(context.exception.status_code, 400)
-            self.assertEqual(context.exception.detail, "Post contains forbidden words")
+            self.assertEqual(context.exception.detail, messages.POST_CONTAINS_FORBIDDEN_WORDS)
             self.session.add.assert_not_called()
             self.session.commit.assert_not_called()
             self.session.refresh.assert_not_called()
@@ -101,7 +102,7 @@ class TestAsyncPosts(unittest.IsolatedAsyncioTestCase):
             await update_post(post_id, body, self.session, self.user)
 
         self.assertEqual(context.exception.status_code, 404)
-        self.assertEqual(context.exception.detail, f"Post with id {post_id} not found")
+        self.assertEqual(context.exception.detail, messages.POST_NOT_FOUND.format(post_id=post_id))
         self.session.commit.assert_not_called()
         self.session.refresh.assert_not_called()
 
@@ -119,7 +120,7 @@ class TestAsyncPosts(unittest.IsolatedAsyncioTestCase):
                 await update_post(post_id, body, self.session, self.user)
 
             self.assertEqual(context.exception.status_code, 400)
-            self.assertEqual(context.exception.detail, "Post contains forbidden words")
+            self.assertEqual(context.exception.detail, messages.POST_CONTAINS_FORBIDDEN_WORDS)
             self.session.rollback.assert_called_once()
             self.session.commit.assert_not_called()
             self.session.refresh.assert_not_called()
@@ -147,5 +148,5 @@ class TestAsyncPosts(unittest.IsolatedAsyncioTestCase):
             await delete_post(post_id, self.session, self.user)
 
         self.assertEqual(context.exception.status_code, 404)
-        self.assertEqual(context.exception.detail, f"Post with id {post_id} not found")
+        self.assertEqual(context.exception.detail, messages.POST_NOT_FOUND.format(post_id=post_id))
         self.session.delete.assert_not_called()

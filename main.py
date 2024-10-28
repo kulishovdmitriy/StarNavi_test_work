@@ -7,6 +7,7 @@ from sqlalchemy import text
 from src.routes import posts, comments, auth
 from src.database.db import get_database
 from src.services.logger import setup_logger
+from src.conf import messages
 
 
 logger = setup_logger(__name__)
@@ -23,9 +24,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+API_PREFIX = 'api/v1'
+
 app.include_router(auth.router)
-app.include_router(posts.router, prefix="/api")
-app.include_router(comments.router, prefix="/api")
+app.include_router(posts.router, prefix=f"{API_PREFIX}")
+app.include_router(comments.router, prefix=f"{API_PREFIX}")
 
 
 @app.get("/")
@@ -64,12 +67,12 @@ async def healthchecker(db: AsyncSession = Depends(get_database)):
         result = result.fetchone()
         if result is None:
             raise HTTPException(
-                status_code=500, detail="Database is not configured correctly"
+                status_code=500, detail=messages.DATABASE_NOT_CONFIGURED
             )
         return {"message": "Welcome to FastAPI!"}
     except Exception as err:
         logger.error(f"Error connecting to the database: {err}")
-        raise HTTPException(status_code=500, detail="Error connecting to the database")
+        raise HTTPException(status_code=500, detail=messages.DATABASE_CONNECTION_ERROR)
 
 
 if __name__ == "__main__":
