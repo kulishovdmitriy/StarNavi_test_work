@@ -15,7 +15,7 @@ from src.repository.comments import (
 from src.schemas.comment import CreateCommentSchema, UpdateCommentSchema, ResponseCommentSchema
 from src.services.auth import current_active_user
 from src.services.logger import setup_logger
-
+from src.conf import messages
 
 logger = setup_logger(__name__)
 
@@ -43,7 +43,7 @@ async def get_comments_view(post_id: int, db: AsyncSession = Depends(get_databas
     if not comments:
         logger.error(f"No comments found for post with id {post_id}")
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"No comments found for post with id {post_id}")
+                            detail=messages.NO_COMMENTS_FOUND.format(post_id=post_id))
     return comments
 
 
@@ -69,7 +69,7 @@ async def get_comment_view(post_id: int, comment_id: int, db: AsyncSession = Dep
     if not comment:
         logger.error(f"No comment found with id {comment_id} for post with id {post_id}")
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"No comment found with id {comment_id} for post with id {post_id}")
+                            detail=messages.NO_COMMENT_FOUND_FOR_POST.format(comment_id=comment_id, post_id=post_id))
     return comment
 
 
@@ -93,9 +93,9 @@ async def create_comment_view(post_id: int, body: CreateCommentSchema, db: Async
     try:
         new_comment = await create_comment(post_id, body, db, user)
         return new_comment
-    except Exception as e:
-        logger.error(f"Failed to create comment for post {post_id}: {e}")
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Failed to create comment")
+    except Exception as err:
+        logger.error(f"Failed to create comment for post {post_id}: {err}")
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=messages.FAILED_TO_CREATE_COMMENT)
 
 
 @router.put('/{comment_id:int}', response_model=ResponseCommentSchema, status_code=status.HTTP_202_ACCEPTED)
@@ -121,7 +121,7 @@ async def update_comment_view(comment_id: int, body: UpdateCommentSchema, db: As
         return comment_updated
     except Exception as err:
         logger.error(f"Failed to update comment {comment_id}: {err}")
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Failed to update comment")
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=messages.FAILED_TO_UPDATE_COMMENT)
 
 
 @router.delete('/{comment_id:int}/{post_id:int}', response_model=ResponseCommentSchema)
@@ -147,14 +147,14 @@ async def delete_comment_view(comment_id: int, post_id: int, db: AsyncSession = 
     if not comment:
         logger.error(f"Comment with id {comment_id} not found for post {post_id}")
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"Comment with id {comment_id} not found for post {post_id}")
+                            detail=messages.COMMENT_NOT_FOUND_FOR_POST.format(comment_id=comment_id, post_id=post_id))
 
     try:
         await delete_comment(comment_id, db, user)
         return Response(status_code=status.HTTP_204_NO_CONTENT)
-    except Exception as e:
-        logger.error(f"Error deleting comment {comment_id} for post {post_id}: {e}")
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Failed to delete comment")
+    except Exception as err:
+        logger.error(f"Error deleting comment {comment_id} for post {post_id}: {err}")
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=messages.FAILED_TO_DELETE_COMMENT)
 
 
 @router.get('/daily-breakdown')
@@ -174,10 +174,11 @@ async def comments_daily_breakdown_view(date_from: date = Query(...), date_to: d
     """
 
     if date_from > date_to:
-        raise HTTPException(status_code=400, detail="date_from must be less than or equal to date_to")
+        raise HTTPException(status_code=400, detail=messages.DATE_FROM_MUST_BE_LESS_OR_EQUAL_DATE_TO)
 
     daily_data = await get_comments_daily_breakdown(date_from, date_to, db)
 
     if not daily_data:
-        return {"message": f"No comments for this period {date_from} - {date_to}."}
+        return {"message": messages.NO_COMMENTS_FOR_PERIOD.format(date_from=date_from, date_to=date_to)}
+
     return daily_data
