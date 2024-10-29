@@ -3,8 +3,6 @@ import pytest
 import pytest_asyncio
 from fastapi.testclient import TestClient
 from fastapi_users.password import PasswordHelper
-from fastapi_users.jwt import generate_jwt
-from sqlalchemy import select
 from sqlalchemy.pool import StaticPool
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
@@ -28,6 +26,7 @@ TestingSessionLocal = async_sessionmaker(autocommit=False, autoflush=False, expi
 test_user = {"id": "user-id", "username": "deadpool", "email": "deadpool@example.com", "password": "123456789"}
 
 SECRET = settings.SECRET_KEY_JWT
+
 
 @pytest.fixture(scope="module", autouse=True)
 def init_models_wrap():
@@ -57,7 +56,7 @@ def client():
         except Exception as err:
             logger.error(f"Error work database: {err}")
             await session.rollback()
-
+            raise
         finally:
             await session.close()
 

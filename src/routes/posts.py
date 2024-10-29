@@ -97,7 +97,7 @@ async def create_post_view(body: CreatePostSchema, db: AsyncSession = Depends(ge
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=messages.FAILED_TO_CREATE_POST)
 
 
-@router.put('/{post_id:int}', response_model=ResponsePostSchema, status_code=status.HTTP_202_ACCEPTED)
+@router.put('/update/{post_id:int}', response_model=ResponsePostSchema, status_code=status.HTTP_202_ACCEPTED)
 async def update_post_view(post_id: int, body: UpdatePostSchema, db: AsyncSession = Depends(get_database),
                            user: User = Depends(current_active_user)):
     """
@@ -134,7 +134,7 @@ async def update_post_view(post_id: int, body: UpdatePostSchema, db: AsyncSessio
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=messages.FAILED_TO_UPDATE_POST)
 
 
-@router.delete('/{post_id:int}', response_model=ResponsePostSchema)
+@router.delete('/delete/{post_id:int}', response_model=ResponsePostSchema)
 async def delete_post_view(post_id: int, db: AsyncSession = Depends(get_database),
                            user: User = Depends(current_active_user)):
     """
