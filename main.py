@@ -27,8 +27,8 @@ app.add_middleware(
 API_PREFIX = 'api/v1'
 
 app.include_router(auth.router)
-app.include_router(posts.router, prefix=f"{API_PREFIX}")
-app.include_router(comments.router, prefix=f"{API_PREFIX}")
+app.include_router(posts.router, prefix=f"/{API_PREFIX}")
+app.include_router(comments.router, prefix=f"/{API_PREFIX}")
 
 
 @app.get("/")
