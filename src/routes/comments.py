@@ -17,6 +17,7 @@ from src.services.auth import current_active_user
 from src.services.logger import setup_logger
 from src.conf import messages
 
+
 logger = setup_logger(__name__)
 
 router = APIRouter(prefix='/comments', tags=['comments'])
@@ -98,7 +99,7 @@ async def create_comment_view(post_id: int, body: CreateCommentSchema, db: Async
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=messages.FAILED_TO_CREATE_COMMENT)
 
 
-@router.put('/{comment_id:int}', response_model=ResponseCommentSchema, status_code=status.HTTP_202_ACCEPTED)
+@router.put('/update/{comment_id:int}', response_model=ResponseCommentSchema, status_code=status.HTTP_202_ACCEPTED)
 async def update_comment_view(comment_id: int, body: UpdateCommentSchema, db: AsyncSession = Depends(get_database),
                               user: User = Depends(current_active_user)):
     """
@@ -124,7 +125,7 @@ async def update_comment_view(comment_id: int, body: UpdateCommentSchema, db: As
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=messages.FAILED_TO_UPDATE_COMMENT)
 
 
-@router.delete('/{comment_id:int}/{post_id:int}', response_model=ResponseCommentSchema)
+@router.delete('/delete/{comment_id:int}/{post_id:int}', response_model=ResponseCommentSchema)
 async def delete_comment_view(comment_id: int, post_id: int, db: AsyncSession = Depends(get_database),
                               user: User = Depends(current_active_user)):
     """
