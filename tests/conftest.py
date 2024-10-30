@@ -41,6 +41,7 @@ def init_models_wrap():
                                 auto_reply_enabled=False, reply_delay_minutes=0, is_active=True, is_verified=True)
             session.add(current_user)
             await session.commit()
+            await session.refresh(current_user)
 
     asyncio.run(init_models())
 
