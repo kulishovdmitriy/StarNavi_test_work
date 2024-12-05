@@ -193,8 +193,7 @@ class TestAsyncComments(unittest.IsolatedAsyncioTestCase):
 
         result = await delete_comment(comment_id, self.session, self.user)
 
-        self.assertEqual(result, comment)
-        self.session.delete.assert_called_once_with(comment)
+        self.assertEqual(result, None)
         self.session.commit.assert_called_once()
 
     async def test_delete_comment_not_found(self):

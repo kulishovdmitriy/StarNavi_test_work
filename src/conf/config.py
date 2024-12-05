@@ -9,9 +9,6 @@ load_dotenv()
 class Settings(BaseSettings):
     """
     Settings class to handle environment variables for the application.
-
-    Configuration:
-        model_config (ConfigDict): Configurations for handling environment files and encoding.
     """
 
     DATABASE_URL: str
