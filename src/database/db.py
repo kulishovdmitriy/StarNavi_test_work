@@ -12,36 +12,20 @@ logger = setup_logger(__name__)
 
 class DatabaseSessionManager:
     """
-    class DatabaseSessionManager:
-        Manages database sessions using SQLAlchemy's async engine and sessionmaker.
-
-        Attributes:
-        _engine: An instance of AsyncEngine created from the provided database URL.
-        _session_maker: An async sessionmaker configured with the engine.
-
-    def __init__(self, url: str):
-        Initializes the DatabaseSessionManager with the specified database URL.
-
-        Parameters:
-        url (str): The database URL.
-
-    @contextlib.asynccontextmanager
-    async def session(self):
-        Provides an async context manager for database sessions.
-        Rolls back the session in case of exceptions and logs the error.
-
-        Raises:
-        RuntimeError: If the session maker is not initialized.
-        Exception: Re-raises any exception that occurs within the session.
+    Manages database sessions using SQLAlchemy's async engine and sessionmaker.
     """
 
     def __init__(self, url: str):
+        # Initializes the session manager with the database URL
         self._engine: AsyncEngine | None = create_async_engine(url)
         self._session_maker: async_sessionmaker = async_sessionmaker(autocommit=False, autoflush=False,
                                                                      bind=self._engine)
 
     @contextlib.asynccontextmanager
     async def session(self):
+        """
+        Provides an async context manager for database sessions. Rolls back on errors.
+        """
         if self._session_maker is None:
             raise RuntimeError("Session maker is not initialized")
         async with self._session_maker() as session:
@@ -58,10 +42,7 @@ sessionmanager = DatabaseSessionManager(settings.DATABASE_URL)
 
 async def get_database() -> AsyncGenerator[AsyncSession, None]:
     """
-    Creates an asynchronous generator that provides an `AsyncSession` object
-    from the session manager.
-
-    :return: An asynchronous generator yielding an `AsyncSession` object.
+    Provides an asynchronous session generator.
     """
 
     async with sessionmanager.session() as session:

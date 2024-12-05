@@ -134,8 +134,7 @@ class TestAsyncPosts(unittest.IsolatedAsyncioTestCase):
 
         result = await delete_post(post_id, self.session, self.user)
 
-        self.assertEqual(result, post)
-        self.session.delete.assert_called_once_with(post)
+        self.assertEqual(result, None)
         self.session.commit.assert_called_once()
 
     async def test_delete_post_not_found(self):

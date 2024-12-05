@@ -27,16 +27,7 @@ router = APIRouter(prefix='/comments', tags=['comments'])
 async def get_comments_view(post_id: int, db: AsyncSession = Depends(get_database),
                             user: User = Depends(current_active_user)):
     """
-    Retrieve comments for a specified post.
-
-    This endpoint fetches a list of comments associated with the given post ID.
-    It requires the user to be authenticated to ensure that only valid users can
-    access the comments.
-
-    :param post_id: ID of the post for which comments are being retrieved.
-    :param db: Database session dependency for executing queries.
-    :param user: Currently authenticated user dependency for user context.
-    :return: A list of comments for the specified post.
+    Get all comments for a specific post.
     """
 
     comments = await get_comments(post_id, db, user)
@@ -48,21 +39,11 @@ async def get_comments_view(post_id: int, db: AsyncSession = Depends(get_databas
     return comments
 
 
-@router.get('/posts/{post_id}/comments/{comment_id}', response_model=ResponseCommentSchema)
+@router.get('/{post_id}/comments/{comment_id}', response_model=ResponseCommentSchema)
 async def get_comment_view(post_id: int, comment_id: int, db: AsyncSession = Depends(get_database),
                            user: User = Depends(current_active_user)):
     """
-    Retrieve a specific comment for a given post.
-
-    This endpoint fetches a single comment based on the provided post ID and
-    comment ID. It requires the user to be authenticated to ensure access control
-    for retrieving comments.
-
-    :param post_id: The ID of the post to which the comment belongs.
-    :param comment_id: The ID of the comment to retrieve.
-    :param db: Database session dependency for executing queries.
-    :param user: Currently authenticated user for authorization context.
-    :return: The comment corresponding to the provided post ID and comment ID.
+    Get a specific comment by ID for a post.
     """
 
     comment = await get_comment_by_post(post_id, comment_id, db, user)
@@ -74,21 +55,11 @@ async def get_comment_view(post_id: int, comment_id: int, db: AsyncSession = Dep
     return comment
 
 
-@router.post('/create', response_model=ResponseCommentSchema, status_code=status.HTTP_201_CREATED)
+@router.post('/{post_id}', response_model=ResponseCommentSchema, status_code=status.HTTP_201_CREATED)
 async def create_comment_view(post_id: int, body: CreateCommentSchema, db: AsyncSession = Depends(get_database),
                               user: User = Depends(current_active_user)):
     """
-    Create a new comment for a specified post.
-
-    This endpoint allows an authenticated user to create a new comment associated
-    with a particular post. The request must include the post ID and the details
-    of the comment in the request body.
-
-    :param post_id: The ID of the post to which the comment is being added.
-    :param body: The schema containing the details of the comment to be created.
-    :param db: The database session dependency used for database operations.
-    :param user: The currently authenticated user creating the comment.
-    :return: The created comment object.
+    Create a new comment for a post.
     """
 
     try:
@@ -99,22 +70,11 @@ async def create_comment_view(post_id: int, body: CreateCommentSchema, db: Async
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=messages.FAILED_TO_CREATE_COMMENT)
 
 
-@router.put('/update/{comment_id:int}', response_model=ResponseCommentSchema, status_code=status.HTTP_202_ACCEPTED)
+@router.put('/{comment_id:int}', response_model=ResponseCommentSchema, status_code=status.HTTP_202_ACCEPTED)
 async def update_comment_view(comment_id: int, body: UpdateCommentSchema, db: AsyncSession = Depends(get_database),
                               user: User = Depends(current_active_user)):
     """
-    Update an existing comment.
-
-    This endpoint allows an authenticated user to update the content of a
-    specific comment. The request must include the comment ID and the updated
-    fields of the comment in the request body. If the comment is successfully
-    updated, the updated comment object will be returned.
-
-    :param comment_id: The ID of the comment to be updated.
-    :param body: The schema containing the updated comment fields.
-    :param db: Database session dependency to interact with the database.
-    :param user: The current active user making the request.
-    :return: The updated comment if successful, or raises an HTTP 422 exception otherwise.
+    Update an existing comment for a post.
     """
 
     try:
@@ -125,22 +85,11 @@ async def update_comment_view(comment_id: int, body: UpdateCommentSchema, db: As
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=messages.FAILED_TO_UPDATE_COMMENT)
 
 
-@router.delete('/delete/{comment_id:int}/{post_id:int}', response_model=ResponseCommentSchema)
+@router.delete('/{comment_id:int}/{post_id:int}', response_model=ResponseCommentSchema)
 async def delete_comment_view(comment_id: int, post_id: int, db: AsyncSession = Depends(get_database),
                               user: User = Depends(current_active_user)):
     """
-    Delete a specific comment associated with a post.
-
-    This endpoint allows an authenticated user to delete a comment from a post
-    using the comment ID and the post ID. If the comment is successfully deleted,
-    the deleted comment object will be returned. If the comment does not exist
-    or the user is not authorized to delete it, an appropriate error response will be provided.
-
-    :param comment_id: Unique identifier of the comment to be deleted.
-    :param post_id: Unique identifier of the post to which the comment belongs.
-    :param db: Asynchronous session dependency for database operations.
-    :param user: Currently authenticated user fetched using dependency injection.
-    :return: HTTP response indicating the success or failure of the delete operation.
+    Delete a specific comment from a post.
     """
 
     comment = await get_comment_by_post(post_id, comment_id, db, user)
@@ -162,16 +111,7 @@ async def delete_comment_view(comment_id: int, post_id: int, db: AsyncSession = 
 async def comments_daily_breakdown_view(date_from: date = Query(...), date_to: date = Query(...),
                                         db: AsyncSession = Depends(get_database)):
     """
-    Retrieve a daily breakdown of comments within a specified date range.
-
-    This endpoint returns the total number of comments and blocked comments for each
-    day within the specified date range. The user must provide both the start and
-    end dates. The data can be used for analysis of comment activity over time.
-
-    :param date_from: Start date for the period to fetch daily comments breakdown.
-    :param date_to: End date for the period to fetch daily comments breakdown.
-    :param db: The database session dependency.
-    :return: Daily breakdown of comments for the specified period.
+    Get daily breakdown of comments within a date range.
     """
 
     if date_from > date_to:

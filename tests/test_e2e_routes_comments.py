@@ -23,9 +23,10 @@ def test_get_not_comments(client, get_token):
 
 def test_create_comments(client, get_token):
     token = get_token
+    post_id = 1
     headers = {"Authorization": f"Bearer {token}"}
     with patch('src.entity.models.Comment.check_profanity', return_value=False):
-        response = client.post('/api/v1/comments/create?post_id=1', headers=headers, json={
+        response = client.post(f'/api/v1/comments/{post_id}', headers=headers, json={
             "description": "test_description"
         })
 
