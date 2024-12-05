@@ -56,7 +56,7 @@ def test_update_comments(client, get_token):
     headers = {"Authorization": f"Bearer {token}"}
     comment_id = 1
     with patch('src.entity.models.Comment.check_profanity', return_value=False):
-        response = client.put(f'/api/v1/comments/update/{comment_id}', headers=headers, json={
+        response = client.put(f'/api/v1/comments/{comment_id}', headers=headers, json={
             "description": "test_description2"
         })
 
@@ -73,7 +73,7 @@ def test_delete_comment(client, get_token):
     comment_id = 1
     post_id = 1
 
-    response = client.delete(f'/api/v1/comments/delete/{comment_id}/{post_id}', headers=headers)
+    response = client.delete(f'/api/v1/comments/{comment_id}/{post_id}', headers=headers)
 
     assert response.status_code == 204
     assert response.content == b''
@@ -85,7 +85,7 @@ def test_delete_not_comment(client, get_token):
     comment_id = 2
     post_id = 1
 
-    response = client.delete(f'/api/v1/comments/delete/{comment_id}/{post_id}', headers=headers)
+    response = client.delete(f'/api/v1/comments/{comment_id}/{post_id}', headers=headers)
 
     assert response.status_code == 404, response.text
     data = response.json()

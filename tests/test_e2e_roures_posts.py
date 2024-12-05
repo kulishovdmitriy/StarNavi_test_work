@@ -82,7 +82,7 @@ def test_update_post(client, get_token):
     token = get_token
     headers = {"Authorization": f"Bearer {token}"}
     post_id = 1
-    response = client.put(f'/api/v1/posts/update/{post_id}', headers=headers, json={
+    response = client.put(f'/api/v1/posts/{post_id}', headers=headers, json={
         'title': 'test_title2',
         'content': 'test_content2',
         'completed': 'true'
@@ -111,7 +111,7 @@ def test_update_post_not_title_and_content(client, get_token):
     token = get_token
     headers = {"Authorization": f"Bearer {token}"}
     post_id = 1
-    response = client.put(f'/api/v1/posts/update/{post_id}', headers=headers, json={
+    response = client.put(f'/api/v1/posts/{post_id}', headers=headers, json={
         'title': '',
         'content': '',
         'completed': 'true'
@@ -126,7 +126,7 @@ def test_delete_post(client, get_token):
     token = get_token
     headers = {"Authorization": f"Bearer {token}"}
     post_id = 1
-    response = client.delete(f'/api/v1/posts/delete/{post_id}', headers=headers)
+    response = client.delete(f'/api/v1/posts/{post_id}', headers=headers)
 
     assert response.status_code == 204
     assert response.content == b''
@@ -136,7 +136,7 @@ def test_delete_not_post(client, get_token):
     token = get_token
     headers = {"Authorization": f"Bearer {token}"}
     post_id = 1
-    response = client.delete(f'/api/v1/posts/delete/{post_id}', headers=headers)
+    response = client.delete(f'/api/v1/posts/{post_id}', headers=headers)
 
     assert response.status_code == 404, response.text
     data = response.json()
